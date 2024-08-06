@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './view/login/LoginScreen';
 import HomeScreen from './view/home/HomeScreen';
 import QrScannerScreen from "./components/qrScan/QrScannerScreen";
+import InspectionRegist from "./view/inspection/InspectionRegist";
 
 const Stack = createStackNavigator();
 
@@ -14,6 +15,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="QrScanner" component={QrScannerScreen} />
+          <Stack.Screen name="안전점검" component={InspectionRegist} />
       </Stack.Navigator>
     </NavigationContainer>
   );

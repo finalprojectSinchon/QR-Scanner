@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, Text, Alert, CheckBox } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Text, Alert } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CheckBox from "@react-native-community/checkbox";
 
 const LoginFormik = () => {
   const navigation = useNavigation();
@@ -54,14 +55,14 @@ const LoginFormik = () => {
       await AsyncStorage.removeItem('rememberMe');
     }
 
-    axios.post('http://192.168.0.20:8080/login', fields, {
+    axios.post('http://192.168.0.209:8080/login', fields, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     })
         .then(res => res.data)
         .then((data) => {
-          Cookies.set('token', data.data.Authorization, { expires: 1 });
+          AsyncStorage.setItem('token', data.data.Authorization);
           navigation.navigate('Home');
         })
         .catch((error) => {
@@ -108,14 +109,6 @@ const LoginFormik = () => {
                 />
                 {touched.userPassword && errors.userPassword && <Text style={styles.error}>{errors.userPassword}</Text>}
 
-                {/*<View style={styles.rememberMeContainer}>*/}
-                {/*  <CheckBox*/}
-                {/*      value={rememberMe}*/}
-                {/*      onValueChange={setRememberMe}*/}
-                {/*      tintColors={{ true: '#841584', false: '#ccc' }}*/}
-                {/*  />*/}
-                {/*  <Text style={styles.rememberMeText}>Remember me</Text>*/}
-                {/*</View>*/}
 
                 <Button onPress={handleSubmit} title="Login" color="#841584" />
               </View>
