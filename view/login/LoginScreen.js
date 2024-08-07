@@ -63,7 +63,7 @@ const LoginFormik = () => {
         .then(res => res.data)
         .then((data) => {
           AsyncStorage.setItem('token', data.data.Authorization);
-          navigation.navigate('Home');
+          navigation.navigate('Main');
         })
         .catch((error) => {
           console.error('로그인 에러:', error);
