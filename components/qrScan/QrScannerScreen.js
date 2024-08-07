@@ -16,10 +16,15 @@ const QrScannerScreen = ({ navigation }) => {
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
-    setScannedData(data);
-    // 여기에서 데이터를 사용하여 필요한 작업을 수행할 수 있습니다.
-    alert(`스캔 완료: ${data}`);
-    navigation.navigate('Home'); // 스캔 후 홈으로 돌아갑니다.
+    try {
+      const parsedData = JSON.parse(data);
+      setScannedData(parsedData);
+      // alert(`스캔 완료: ${JSON.stringify(parsedData)}`);
+      navigation.navigate('안전점검', { scannedData : parsedData });
+    } catch (error) {
+      console.error('QR 코드 데이터 파싱 실패:', error);
+      alert('유효하지 않은 QR 코드 데이터입니다.');
+    }
   };
 
   if (hasPermission === null) {
@@ -36,7 +41,10 @@ const QrScannerScreen = ({ navigation }) => {
         style={StyleSheet.absoluteFillObject}
       />
       {scanned && <Button title={'다시 스캔'} onPress={() => setScanned(false)} />}
-      <Text style={styles.scannedData}>{scannedData}</Text>
+      <Text style={styles.scannedData}>
+        {typeof scannedData === 'object' ? JSON.stringify(scannedData) : scannedData}
+      </Text>
+
     </View>
   );
 };
