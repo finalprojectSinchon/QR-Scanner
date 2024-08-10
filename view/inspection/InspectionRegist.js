@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,6 +8,11 @@ import {
     ScrollView,
     SafeAreaView,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
+    Modal,
+    ActivityIndicator,
+    Image
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,9 +33,12 @@ const InspectionRegist = () => {
         type: '',
         regularInspectionDate: '',
         phone: '',
-        userCode : '',
-        airplaneCode : '',
+        userCode: '',
+        airplaneCode: '',
     });
+    const [loading, setLoading] = useState(false);  // 로딩 상태 추가
+
+    const scrollViewRef = useRef(null);
 
     const getCurrentDate = () => {
         const today = new Date();
@@ -46,7 +54,7 @@ const InspectionRegist = () => {
                 const storedToken = await AsyncStorage.getItem('token');
                 if (storedToken) {
                     setToken(storedToken);
-                    const response = await axios.get('http://192.168.0.209:8080/user-info', {
+                    const response = await axios.get('http://192.168.0.20:8080/user-info', {
                         headers: {
                             Authorization: storedToken
                         }
@@ -73,7 +81,7 @@ const InspectionRegist = () => {
                 const storedToken = await AsyncStorage.getItem('token');
                 if (storedToken) {
                     setToken(storedToken);
-                    const response = await axios.get(`http://192.168.0.209:8080/api/v1/qr/${scannedData.facilityName}/${scannedData.facilityId}`, {
+                    const response = await axios.get(`http://192.168.0.20:8080/api/v1/qr/${scannedData.facilityName}/${scannedData.facilityId}`, {
                         headers: {
                             Authorization: storedToken
                         }
@@ -81,7 +89,7 @@ const InspectionRegist = () => {
                     setLocation(response.data.data);
                     setInspectionInfo(prevInfo => ({
                         ...prevInfo,
-                        airplaneCode : scannedData.facilityId
+                        airplaneCode: scannedData.facilityId
                     }));
                 } else {
                     Alert.alert(
@@ -109,7 +117,7 @@ const InspectionRegist = () => {
                 ...prevInfo,
                 manager: userInfo.userName || '',
                 phone: userInfo.userPhone || '',
-                userCode : userInfo.userCode || '',
+                userCode: userInfo.userCode || '',
             }));
         }
     }, [userInfo]);
@@ -143,11 +151,13 @@ const InspectionRegist = () => {
     };
 
     const handleRegisterClick = async () => {
+        setLoading(true);  // 로딩 시작
+
         try {
             const storedToken = await AsyncStorage.getItem('token');
             if (storedToken) {
                 await axios.post(
-                    'http://192.168.0.209:8080/api/v1/qr',
+                    'http://192.168.0.20:8080/api/v1/qr',
                     inspectionInfo,
                     {
                         headers: {
@@ -157,14 +167,16 @@ const InspectionRegist = () => {
                     }
                 );
                 Alert.alert("등록 완료", "점검이 성공적으로 등록되었습니다.");
+                navigation.navigate('Main')
             } else {
                 Alert.alert("토큰 오류", "토큰을 찾을 수 없습니다. 다시 로그인 해주세요.");
             }
         } catch (error) {
             Alert.alert("등록 오류", "점검 등록 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        } finally {
+            setLoading(false);  // 로딩 종료
         }
     };
-
 
     const StatusButton = ({ title, isSelected, onPress }) => (
         <TouchableOpacity
@@ -179,101 +191,132 @@ const InspectionRegist = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.title}>안전 점검 등록</Text>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.container}
+                keyboardVerticalOffset={100}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    ref={scrollViewRef}
+                >
+                    <Text style={styles.title}>안전 점검 등록</Text>
 
-                <View style={styles.card}>
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Location</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="안전점검 할 위치를 입력하세요"
-                            value={inspectionInfo.location}
-                            onChangeText={(value) => onChangeHandler('location', value)}
-                        />
-                    </View>
-
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Status</Text>
-                        <View style={styles.statusButtonContainer}>
-                            <StatusButton
-                                title="정상"
-                                isSelected={inspectionInfo.status === '정상'}
-                                onPress={() => onChangeHandler('status', '정상')}
-                            />
-                            <StatusButton
-                                title="점검중"
-                                isSelected={inspectionInfo.status === '점검중'}
-                                onPress={() => onChangeHandler('status', '점검중')}
-                            />
-                            <StatusButton
-                                title="중단"
-                                isSelected={inspectionInfo.status === '중단'}
-                                onPress={() => onChangeHandler('status', '중단')}
+                    <View style={styles.card}>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Location</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="안전점검 할 위치를 입력하세요"
+                                value={inspectionInfo.location}
+                                onChangeText={(value) => onChangeHandler('location', value)}
                             />
                         </View>
-                    </View>
 
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Type</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="타입을 입력하세요"
-                            value={inspectionInfo.type}
-                            onChangeText={(value) => onChangeHandler('type', value)}
-                        />
-                    </View>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Status</Text>
+                            <View style={styles.statusButtonContainer}>
+                                <StatusButton
+                                    title="정상"
+                                    isSelected={inspectionInfo.status === '정상'}
+                                    onPress={() => onChangeHandler('status', '정상')}
+                                />
+                                <StatusButton
+                                    title="점검중"
+                                    isSelected={inspectionInfo.status === '점검중'}
+                                    onPress={() => onChangeHandler('status', '점검중')}
+                                />
+                                <StatusButton
+                                    title="중단"
+                                    isSelected={inspectionInfo.status === '중단'}
+                                    onPress={() => onChangeHandler('status', '중단')}
+                                />
+                            </View>
+                        </View>
 
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Manager</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="이름을 입력하세요"
-                            value={inspectionInfo.manager}
-                            onChangeText={(value) => onChangeHandler('manager', value)}
-                        />
-                    </View>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Type</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="타입을 입력하세요"
+                                value={inspectionInfo.type}
+                                onChangeText={(value) => onChangeHandler('type', value)}
+                            />
+                        </View>
 
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Regular Inspection Date</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="점검일을 기입하세요. EX)202X-XX-XX"
-                            value={inspectionInfo.regularInspectionDate}
-                            onChangeText={(value) =>
-                                onChangeHandler('regularInspectionDate', value)
-                            }
-                        />
-                    </View>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Manager</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="이름을 입력하세요"
+                                value={inspectionInfo.manager}
+                                onChangeText={(value) => onChangeHandler('manager', value)}
+                            />
+                        </View>
 
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Phone</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="EX)010-****-****"
-                            maxLength={13}
-                            value={inspectionInfo.phone}
-                            onChangeText={(value) => onChangeHandler('phone', value)}
-                        />
-                    </View>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Regular Inspection Date</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="점검일을 기입하세요. EX)202X-XX-XX"
+                                value={inspectionInfo.regularInspectionDate}
+                                onChangeText={(value) =>
+                                    onChangeHandler('regularInspectionDate', value)
+                                }
+                            />
+                        </View>
 
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>비고</Text>
-                        <TextInput
-                            style={[styles.input, styles.textarea]}
-                            placeholder="특이사항을 입력하세요"
-                            multiline
-                            numberOfLines={6}
-                            value={inspectionInfo.text}
-                            onChangeText={(value) => onChangeHandler('text', value)}
-                        />
-                    </View>
-                </View>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>Phone</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="EX)010-****-****"
+                                maxLength={13}
+                                value={inspectionInfo.phone}
+                                onChangeText={(value) => onChangeHandler('phone', value)}
+                            />
+                        </View>
 
-                <TouchableOpacity style={styles.button} onPress={handleRegisterClick}>
-                    <Text style={styles.buttonText}>등록</Text>
-                </TouchableOpacity>
-            </ScrollView>
+                        <View style={styles.formGroup}>
+                            <Text style={styles.label}>비고</Text>
+                            <TextInput
+                                style={[styles.input, styles.textarea]}
+                                placeholder="특이사항을 입력하세요"
+                                multiline
+                                numberOfLines={6}
+                                value={inspectionInfo.text}
+                                onChangeText={(value) => onChangeHandler('text', value)}
+                                onFocus={() => {
+                                    setTimeout(() => {
+                                        scrollViewRef.current.scrollToEnd({ animated: true });
+                                    }, 300);
+                                }}
+                            />
+                        </View>
+
+                        <TouchableOpacity style={styles.button} onPress={handleRegisterClick}>
+                            <Text style={styles.buttonText}>등록</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+
+                {/* 로딩 모달 */}
+                <Modal
+                    transparent={true}
+                    visible={loading}
+                    onRequestClose={() => setLoading(false)}
+                >
+                    <View style={styles.modalBackground}>
+                        <View style={styles.modalContainer}>
+                            <Image
+                                source={require('../../assets/loading.gif')}
+                                style={styles.loadingImage}
+                            />
+                            <Text style={styles.loadingText}>보고서 생성중입니다...</Text>
+                        </View>
+                    </View>
+                </Modal>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -281,75 +324,48 @@ const InspectionRegist = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F0F5',
+        backgroundColor: '#f4f4f4',
     },
     scrollContainer: {
-        padding: 20,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#333',
-        textAlign: 'center',
+        paddingVertical: 20,
+        paddingHorizontal: 16,
     },
     card: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 15,
-        padding: 20,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 2,
         marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.23,
-        shadowRadius: 2.62,
-        elevation: 4,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        textAlign: 'center',
     },
     formGroup: {
-        marginBottom: 20,
+        marginBottom: 16,
     },
     label: {
         fontSize: 16,
+        fontWeight: 'bold',
         marginBottom: 8,
-        color: '#555',
-        fontWeight: '600',
     },
     input: {
-        backgroundColor: '#F8F8F8',
-        borderColor: '#E0E0E0',
+        height: 40,
+        borderColor: '#ddd',
         borderWidth: 1,
-        borderRadius: 10,
-        padding: 15,
-        fontSize: 16,
-        color: '#333',
-    },
-    pickerContainer: {
-        backgroundColor: '#F8F8F8',
-        borderColor: '#E0E0E0',
-        borderWidth: 1,
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    picker: {
-        height: 50,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        backgroundColor: '#f9f9f9',
     },
     textarea: {
         height: 120,
         textAlignVertical: 'top',
-    },
-    button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 10,
-        padding: 15,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     statusButtonContainer: {
         flexDirection: 'row',
@@ -357,24 +373,55 @@ const styles = StyleSheet.create({
     },
     statusButton: {
         flex: 1,
-        paddingVertical: 10,
-        paddingHorizontal: 5,
-        borderWidth: 1,
-        borderColor: '#007AFF',
-        borderRadius: 5,
+        padding: 10,
         marginHorizontal: 5,
-        alignItems: 'center',
+        backgroundColor: '#ddd',
+        borderRadius: 8,
     },
     selectedStatusButton: {
         backgroundColor: '#007AFF',
     },
     statusButtonText: {
-        color: '#007AFF',
-        fontSize: 14,
-        fontWeight: '600',
+        color: '#333',
+        textAlign: 'center',
     },
     selectedStatusButtonText: {
-        color: '#FFFFFF',
+        color: '#fff',
+    },
+    button: {
+        backgroundColor: '#007AFF',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalBackground: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        width: 150,
+        height: 150,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingImage: {
+        width: 100,
+        height: 100,
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#333',
     },
 });
 
