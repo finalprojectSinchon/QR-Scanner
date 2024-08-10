@@ -13,7 +13,7 @@ const Tab = createBottomTabNavigator();
 
 const HomeWebView = () => (
     <WebView
-        source={{ uri: 'http://192.168.0.209:5173/' }}
+        source={{ uri: 'http://127.0.0.1/:5173/' }}
         style={{ flex: 1 }}
     />
 );

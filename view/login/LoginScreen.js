@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, Text, Alert } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Text, Alert, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ImageBackground } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CheckBox from "@react-native-community/checkbox";
+import Checkbox from 'expo-checkbox';
 
 const LoginFormik = () => {
   const navigation = useNavigation();
@@ -55,7 +54,7 @@ const LoginFormik = () => {
       await AsyncStorage.removeItem('rememberMe');
     }
 
-    axios.post('http://192.168.0.209:8080/login', fields, {
+    axios.post('http://192.168.0.20:8080/login', fields, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -72,60 +71,105 @@ const LoginFormik = () => {
   };
 
   return (
-      <View style={styles.loginBox}>
-        <Formik
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            onSubmit={submitHandler}
-        >
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-              <View style={styles.container}>
-                <Text style={styles.label}>ID</Text>
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.userId && touched.userId ? styles.errorInput : null,
-                    ]}
-                    onChangeText={handleChange('userId')}
-                    onBlur={handleBlur('userId')}
-                    value={values.userId}
-                    placeholder="Enter your ID"
-                    placeholderTextColor="#888"
-                />
-                {touched.userId && errors.userId && <Text style={styles.error}>{errors.userId}</Text>}
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : null}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <ImageBackground
+              source={{ uri: 'https://i.postimg.cc/g2kVhd2k/view-of-3d-airplane-with-travel-destination-landscape.jpg' }}
+              style={styles.backgroundImage}
+          >
+            <View style={styles.loginBox}>
+              <Text style={styles.title}>AirService</Text>
 
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.userPassword && touched.userPassword ? styles.errorInput : null,
-                    ]}
-                    secureTextEntry
-                    onChangeText={handleChange('userPassword')}
-                    onBlur={handleBlur('userPassword')}
-                    value={values.userPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#888"
-                />
-                {touched.userPassword && errors.userPassword && <Text style={styles.error}>{errors.userPassword}</Text>}
+              <Formik
+                  initialValues={initialValues}
+                  validationSchema={validationSchema}
+                  onSubmit={submitHandler}
+              >
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                    <View style={styles.formContainer}>
+                      <Text style={styles.label}>ID</Text>
+                      <TextInput
+                          style={[
+                            styles.input,
+                            errors.userId && touched.userId ? styles.errorInput : null,
+                          ]}
+                          onChangeText={handleChange('userId')}
+                          onBlur={handleBlur('userId')}
+                          value={values.userId}
+                          placeholder="Enter your ID"
+                          placeholderTextColor="#888"
+                      />
+                      {touched.userId && errors.userId && <Text style={styles.error}>{errors.userId}</Text>}
 
+                      <Text style={styles.label}>Password</Text>
+                      <TextInput
+                          style={[
+                            styles.input,
+                            errors.userPassword && touched.userPassword ? styles.errorInput : null,
+                          ]}
+                          secureTextEntry
+                          onChangeText={handleChange('userPassword')}
+                          onBlur={handleBlur('userPassword')}
+                          value={values.userPassword}
+                          placeholder="Enter your password"
+                          placeholderTextColor="#888"
+                      />
+                      {touched.userPassword && errors.userPassword && <Text style={styles.error}>{errors.userPassword}</Text>}
 
-                <Button onPress={handleSubmit} title="Login" color="#841584" />
-              </View>
-          )}
-        </Formik>
-      </View>
+                      <View style={styles.rememberMeContainer}>
+                        <Checkbox
+                            value={rememberMe}
+                            onValueChange={(newValue) => setRememberMe(newValue)}
+                        />
+                        <Text style={styles.rememberMeText}>로그인 상태 유지</Text>
+                      </View>
+
+                      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                        <Text style={styles.buttonText}>로그인하기</Text>
+                      </TouchableOpacity>
+                    </View>
+                )}
+              </Formik>
+            </View>
+          </ImageBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  loginBox: {
+  container: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  backgroundImage: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f0f0f0', // 배경색을 추가하여 더 깔끔한 느낌
   },
-  container: {
+  loginBox: {
+    padding: 20,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  formContainer: {
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 20,
@@ -166,6 +210,19 @@ const styles = StyleSheet.create({
   rememberMeText: {
     marginLeft: 8,
     color: '#333',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
