@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 const HomeScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>AirService</Text>
+            <Text style={styles.header}>SkyCare</Text>
             <Text style={styles.text}>스캔하세요</Text>
 
             <TouchableOpacity
