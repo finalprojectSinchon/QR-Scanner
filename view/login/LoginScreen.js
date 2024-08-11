@@ -82,7 +82,13 @@ const LoginFormik = () => {
               style={styles.backgroundImage}
           >
             <View style={styles.loginBox}>
-              <Text style={styles.title}>AirService</Text>
+              {/*<Text style={styles.title}>SkyCare</Text>*/}
+
+              <Image
+                  source={{ uri: 'https://github.com/user-attachments/assets/f302bd66-767c-48f1-a097-eb9498feeca9' }}
+                  style={styles.logo}
+                  alt="logo"
+              />
 
               <Formik
                   initialValues={initialValues}
@@ -155,13 +161,18 @@ const styles = StyleSheet.create({
   },
   loginBox: {
     padding: 20,
-    backgroundColor: '#f0f0f0',
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
+  },
+  logo: {
+    width: 300,
+    height: 100,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
