@@ -54,7 +54,7 @@ const InspectionRegist = () => {
                 const storedToken = await AsyncStorage.getItem('token');
                 if (storedToken) {
                     setToken(storedToken);
-                    const response = await axios.get('http://192.168.0.20:8080/user-info', {
+                    const response = await axios.get('http://skycare.site:8080/user-info', {
                         headers: {
                             Authorization: storedToken
                         }
@@ -81,7 +81,7 @@ const InspectionRegist = () => {
                 const storedToken = await AsyncStorage.getItem('token');
                 if (storedToken) {
                     setToken(storedToken);
-                    const response = await axios.get(`http://192.168.0.20:8080/api/v1/qr/${scannedData.facilityName}/${scannedData.facilityId}`, {
+                    const response = await axios.get(`http:/skycare.site:8080/api/v1/qr/${scannedData.facilityName}/${scannedData.facilityId}`, {
                         headers: {
                             Authorization: storedToken
                         }
@@ -157,7 +157,7 @@ const InspectionRegist = () => {
             const storedToken = await AsyncStorage.getItem('token');
             if (storedToken) {
                 await axios.post(
-                    'http://192.168.0.20:8080/api/v1/qr',
+                    'http://skycare.site:8080/api/v1/qr',
                     inspectionInfo,
                     {
                         headers: {

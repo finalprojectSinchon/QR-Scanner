@@ -13,7 +13,7 @@ const Tab = createBottomTabNavigator();
 
 const HomeWebView = () => (
     <WebView
-        source={{ uri: 'http://127.0.0.1/:5173/' }}
+        source={{ uri: 'http://skycare.site' }}
         style={{ flex: 1 }}
     />
 );

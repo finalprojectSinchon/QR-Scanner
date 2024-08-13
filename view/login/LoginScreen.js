@@ -54,7 +54,8 @@ const LoginFormik = () => {
       await AsyncStorage.removeItem('rememberMe');
     }
 
-    axios.post('http://192.168.0.20:8080/login', fields, {
+
+    axios.post('http://skycare.site:8080/login', fields, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
