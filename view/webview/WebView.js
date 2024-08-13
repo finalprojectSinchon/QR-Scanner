@@ -4,7 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 const WebViewForQR = () => {
     const openBrowser = async () => {
-        let result = await WebBrowser.openBrowserAsync('http://localhost:5713');
+        let result = await WebBrowser.openBrowserAsync('http://skycare.site');
         // 브라우저가 닫힐 때 result로 결과를 받을 수 있습니다.
     };
 
