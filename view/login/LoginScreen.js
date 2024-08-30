@@ -132,7 +132,7 @@ const LoginFormik = () => {
                             value={rememberMe}
                             onValueChange={(newValue) => setRememberMe(newValue)}
                         />
-                        <Text style={styles.rememberMeText}>로그인 상태 유지</Text>
+                        <Text style={styles.rememberMeText}>가억하기</Text>
                       </View>
 
                       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
